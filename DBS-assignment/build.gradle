@@ -22,3 +22,11 @@ sourceSets {
         }
     }
 }
+
+jar {
+    manifest {
+        attributes(
+                'Main-Class': 'DBSGUI.DBSInput'
+        )
+    }
+}
