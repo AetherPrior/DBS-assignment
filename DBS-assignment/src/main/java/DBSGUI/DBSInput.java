@@ -8,6 +8,8 @@ package DBSGUI;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Consumer;
 
 /**
@@ -105,6 +107,62 @@ public class DBSInput extends javax.swing.JFrame {
         }
         return s1;
     }
+    
+    static Map<Set<String>, Set<String>> parseFD(String FD)
+    {
+        FD = FD.replaceAll("\\s", "");
+        Set<String> XY = new HashSet<>(Arrays.asList(FD.split(";")));
+        Map<Set<String>, Set<String>> F = new HashMap<>();
+        
+        for(var i: XY)
+        {
+            String[] lr = i.split("->");
+            String X_Arr[] = lr[0].split(","); 
+            String Y_Arr[] = lr[1].split(",");
+
+            Set<String> X = new HashSet<>(Arrays.asList(X_Arr));
+            Set<String> Y = new HashSet<>(Arrays.asList(Y_Arr));
+            F.put(X,Y);
+        }       
+        return F;
+    }
+    
+    static Set<Set<String>> to2NF(Set<Set<String>> R, String FD, Set<Set<String>> Keys)
+    {
+        FD = FD.replaceAll("\\s", "");
+        
+        Set<Set<String>> Rnew = new HashSet<>();
+        
+        Set<String> XY = new HashSet<>(Arrays.asList(FD.split(";")));
+        
+        while(true)
+        {
+            boolean modifiedFlag = false;
+            for(Set<String> Ri : R)
+            {
+                for(String i: XY)
+                {
+                    String[] lr = i.split("->");
+                    String X_Arr[] = lr[0].split(","); //indexing not supported in sets
+                    String Y_Arr[] = lr[1].split(",");
+
+                    Set<String> Xdep = new HashSet<>(Arrays.asList(X_Arr));
+                    Set<String> Ydep = new HashSet<>(Arrays.asList(Y_Arr));
+
+                    if(!Keys.contains(Xdep)) 
+                    {
+                    } 
+                    else 
+                    {
+                    }
+                }
+            }
+            if(!modifiedFlag)
+                break;
+        }
+        
+        return Rnew;
+    }
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -198,6 +256,12 @@ public class DBSInput extends javax.swing.JFrame {
             }
             System.out.println("");
         }
+        
+        Map<Set<String>, Set<String>> F = parseFD(FD);
+        System.out.println(FD);
+        System.out.println(F);
+        //for(var i : F.entrySet())
+        //    System.out.println();
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
