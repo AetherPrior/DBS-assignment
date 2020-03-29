@@ -5,6 +5,11 @@
  */
 package DBSGUI;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.function.Consumer;
+
 /**
  *
  * @author l12-o-0-554
@@ -17,7 +22,99 @@ public class DBSInput extends javax.swing.JFrame {
     public DBSInput() {
         initComponents();
     }
+    static Set<String> closureHandler(String[] X, String FD)
+    {
+        FD = FD.replaceAll("\\s", "");
+        
+        Set<String> Cl = new HashSet<>(Arrays.asList(X.clone())); 
+        
+        Set<String> XY = new HashSet<>(Arrays.asList(FD.split(";")));
+        
+        do{
+        Set<String>OldCl = new HashSet<>(Cl);
+             
+        for(String i: XY)
+        {
+            String[] lr = i.split("->");
+            String X_Arr[] = lr[0].split(","); //indexing not supported in sets
+            String Y_Arr[] = lr[1].split(",");
+            Set<String> Xdep = new HashSet<>();
+            Xdep.addAll(Arrays.asList(X_Arr));
+            Set<String> XSC = new HashSet<>(Cl);
+            XSC.retainAll(Xdep);
+            if (XSC == Xdep) {
+                //then Xset was a superset.
+                Cl.addAll(Arrays.asList(Y_Arr));
+            }
+        }
+        if(OldCl.equals(Cl))
+            break;
+        }while(true);
+        
+        
+        return Cl;
+    }
+    
+    static Set<Set<String>> candidateKeys(String[] X, String FD)
+    {
+        FD = FD.replaceAll("\\s", "");
+        
+        Set<String> Xset = new HashSet<>(Arrays.asList(X.clone())); 
+        
+        Set<String> XY = new HashSet<>(Arrays.asList(FD.split(";")));
 
+        Set<Set<String>> s1 = new HashSet<>();
+        s1.add(Xset);
+        
+        while(true)
+        {
+        Set<Set<String>> oldS1 = new HashSet<>(s1);
+        boolean modifiedFlag = false;
+        for(Set<String> set: oldS1) 
+        {
+            for(String i: XY)
+            {
+                String[] lr = i.split("->");
+                String X_Arr[] = lr[0].split(","); //indexing not supported in sets
+                String Y_Arr[] = lr[1].split(",");
+                /*
+                Arrays.asList(X_Arr).stream().forEachOrdered((System.out::println));
+                System.out.println("");
+                Arrays.asList(Y_Arr).stream().forEachOrdered((System.out::println));
+                System.out.println("");
+                */
+                Set<String> Xdep = new HashSet<>(Arrays.asList(X_Arr));
+                Set<String> Ydep = new HashSet<>(Arrays.asList(Y_Arr));
+                Set<String> YSC = new HashSet<>(set);
+                YSC.retainAll(Ydep);
+                
+                Set<String> XSC = new HashSet<>(set);
+                XSC.retainAll(Xdep);
+                /*
+                XSC.forEach(System.out::println);
+                */
+                if (YSC.equals(Ydep) && XSC.equals(Xdep)) 
+                {
+                    //then set was a superset.
+                    Set<String> Subset = new HashSet(set);
+                    Subset.removeAll(Ydep);
+                    if(!modifiedFlag)
+                    {
+                        modifiedFlag = true;
+                        s1.clear();
+                    }
+                    s1.add(Subset);
+                } 
+            }
+        }
+        //System.out.println(modifiedFlag);
+        //s1.forEach((s) ->{s.forEach(System.out::print); System.out.print(" ");});
+        System.out.println("");
+        if(!modifiedFlag)
+            break;
+        }
+        return s1;
+    }
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -81,9 +178,29 @@ public class DBSInput extends javax.swing.JFrame {
 
         /* Create and display the form */
         //Before importing any image, make sure you add it to the project resources.
+        
         java.awt.EventQueue.invokeLater(() -> {
             new DBSInput().setVisible(true);
         });
+        String FD = new String();
+        FD = "A->B;B,C->E;E,D->A;";
+        
+        String[] X = new String[5];
+        X[0] = "A";
+        X[1] = "B";
+        X[2] = "C";
+        X[3] = "D";
+        X[4] = "E";
+        Set<Set<String>> S1 = candidateKeys(X,FD);
+        
+        for(Set<String> i: S1)
+        {
+            for(String j:i)
+            {
+                System.out.print(j);
+            }
+            System.out.println("");
+        }
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
