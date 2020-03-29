@@ -77,12 +77,7 @@ public class DBSInput extends javax.swing.JFrame {
                 String[] lr = i.split("->");
                 String X_Arr[] = lr[0].split(","); //indexing not supported in sets
                 String Y_Arr[] = lr[1].split(",");
-                /*
-                Arrays.asList(X_Arr).stream().forEachOrdered((System.out::println));
-                System.out.println("");
-                Arrays.asList(Y_Arr).stream().forEachOrdered((System.out::println));
-                System.out.println("");
-                */
+                
                 Set<String> Xdep = new HashSet<>(Arrays.asList(X_Arr));
                 Set<String> Ydep = new HashSet<>(Arrays.asList(Y_Arr));
                 Set<String> YSC = new HashSet<>(set);
@@ -90,9 +85,7 @@ public class DBSInput extends javax.swing.JFrame {
                 
                 Set<String> XSC = new HashSet<>(set);
                 XSC.retainAll(Xdep);
-                /*
-                XSC.forEach(System.out::println);
-                */
+                
                 if (YSC.equals(Ydep) && XSC.equals(Xdep)) 
                 {
                     //then set was a superset.
@@ -107,9 +100,6 @@ public class DBSInput extends javax.swing.JFrame {
                 } 
             }
         }
-        //System.out.println(modifiedFlag);
-        //s1.forEach((s) ->{s.forEach(System.out::print); System.out.print(" ");});
-        System.out.println("");
         if(!modifiedFlag)
             break;
         }
@@ -184,6 +174,13 @@ public class DBSInput extends javax.swing.JFrame {
         });
         String FD = new String();
         FD = "A->B;B,C->E;E,D->A;";
+        
+        //input A->B 
+        //      BC->E
+        //      ED->A
+        
+        //output:
+        //      ACD,BCD,CDE
         
         String[] X = new String[5];
         X[0] = "A";
