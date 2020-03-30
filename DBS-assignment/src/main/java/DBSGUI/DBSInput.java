@@ -122,13 +122,8 @@ public class DBSInput extends javax.swing.JFrame {
 
             Set<String> X = new HashSet<>(Arrays.asList(X_Arr));
             Set<String> Y = new HashSet<>(Arrays.asList(Y_Arr));
-            
-            for(var j : Y)
-            {
-                Set<String> t = new HashSet<>();
-                t.add(j);
-                F.put(X,t);
-            }
+            System.out.println(X + "test" + Y);
+            F.put(X, Y);
         }       
         return F;
     }
@@ -260,7 +255,7 @@ public class DBSInput extends javax.swing.JFrame {
         });
         String FD = new String();
         //FD = "A->B;B,C->E;E,D->A;";
-        FD = "A,B->C;B->D;A->E;";
+        FD = "A->C,E;B->D";
         
         //input A->B 
         //      BC->E
