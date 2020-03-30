@@ -149,7 +149,7 @@ public class DBSInput extends javax.swing.JFrame {
         while(true)
         {
             boolean modifiedFlag = false;
-            for(var Ri : R)
+            for(var Ri : Rnew)
             {
                 for(var i: FD.entrySet())
                 {
@@ -287,6 +287,7 @@ public class DBSInput extends javax.swing.JFrame {
         }
         
         var F = parseFD(FD);
+        System.out.println(FD);
         System.out.println(F);
         
         Set<String> inputR = new HashSet<>();
@@ -303,7 +304,7 @@ public class DBSInput extends javax.swing.JFrame {
         PK.add("A");
         PK.add("B");
         
-        //R = to2NF(R, F, S1, PK);
+        R = to2NF(R, F, S1, PK);
         
         System.out.println(R);
         //for(var i : F.entrySet())
