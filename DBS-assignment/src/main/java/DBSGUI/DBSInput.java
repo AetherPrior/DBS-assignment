@@ -127,34 +127,53 @@ public class DBSInput extends javax.swing.JFrame {
         return F;
     }
     
-    static Set<Set<String>> to2NF(Set<Set<String>> R, String FD, Set<Set<String>> Keys)
+    static boolean isPrime(String X, Set<Set<String>> Keys)
     {
-        FD = FD.replaceAll("\\s", "");
-        
-        Set<Set<String>> Rnew = new HashSet<>();
-        
-        Set<String> XY = new HashSet<>(Arrays.asList(FD.split(";")));
+        for(var CD:Keys)
+            if(CD.contains(X))
+                return true;
+        return false;
+    }
+    
+    static Set<Set<String>> to2NF(Set<Set<String>> R, Map<Set<String>,Set<String>> FD, Set<Set<String>> Keys, Set<String> PK)
+    {
+        Set<Set<String>> Rnew = new HashSet<>(R);
         
         while(true)
         {
             boolean modifiedFlag = false;
-            for(Set<String> Ri : R)
+            for(var Ri : Rnew)
             {
-                for(String i: XY)
+                for(var i: FD.entrySet())
                 {
-                    String[] lr = i.split("->");
-                    String X_Arr[] = lr[0].split(","); //indexing not supported in sets
-                    String Y_Arr[] = lr[1].split(",");
-
-                    Set<String> Xdep = new HashSet<>(Arrays.asList(X_Arr));
-                    Set<String> Ydep = new HashSet<>(Arrays.asList(Y_Arr));
-
-                    if(!Keys.contains(Xdep)) 
+                    var X = i.getKey();
+                    var Y = i.getValue();
+                    
+                    if(isPrime(Y.iterator().next(), Keys))
+                        continue;
+                    
+                    var t = new HashSet<>(X);
+                    t.retainAll(PK);
+                    if(!PK.equals(X)) 
                     {
+                        t = new HashSet<>(Ri);
+                        t.retainAll(X);
+                        if(t.equals(X))
+                        {
+                            Rnew.remove(Ri);
+                            t = new HashSet<>(Y);
+                            t.removeAll(X);
+                            var t2 = new HashSet<>(Ri); 
+                            t2.removeAll(t);
+                            Rnew.add(t2);
+                            
+                            X.addAll(Y);
+                            Rnew.add(X);
+                           
+                            //modifiedFlag = true;
+                            break;
+                        }
                     } 
-                    else 
-                    {
-                    }
                 }
             }
             if(!modifiedFlag)
@@ -231,7 +250,8 @@ public class DBSInput extends javax.swing.JFrame {
             new DBSInput().setVisible(true);
         });
         String FD = new String();
-        FD = "A->B;B,C->E;E,D->A;";
+        //FD = "A->B;B,C->E;E,D->A;";
+        FD = "A,B->C;B->D;A->E;";
         
         //input A->B 
         //      BC->E
@@ -257,9 +277,27 @@ public class DBSInput extends javax.swing.JFrame {
             System.out.println("");
         }
         
-        Map<Set<String>, Set<String>> F = parseFD(FD);
-        System.out.println(FD);
-        System.out.println(F);
+        var F = parseFD(FD);
+        
+        Set<String> inputR = new HashSet<>();
+        inputR.add("A");
+        inputR.add("B");
+        inputR.add("C");
+        inputR.add("D");
+        inputR.add("E");
+        
+        Set<Set<String>> R = new HashSet<>();
+        R.add(inputR);
+  
+        System.out.println(R);
+        
+        Set<String> PK = new HashSet<>();
+        PK.add("A");
+        PK.add("B");
+        
+        R = to2NF(R, F, S1, PK);
+        
+        System.out.println(R);
         //for(var i : F.entrySet())
         //    System.out.println();
     }
