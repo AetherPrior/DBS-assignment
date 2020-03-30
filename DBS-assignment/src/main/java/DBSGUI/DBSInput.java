@@ -122,7 +122,13 @@ public class DBSInput extends javax.swing.JFrame {
 
             Set<String> X = new HashSet<>(Arrays.asList(X_Arr));
             Set<String> Y = new HashSet<>(Arrays.asList(Y_Arr));
-            F.put(X,Y);
+            
+            for(var j : Y)
+            {
+                Set<String> t = new HashSet<>();
+                t.add(j);
+                F.put(X,t);
+            }
         }       
         return F;
     }
@@ -281,6 +287,7 @@ public class DBSInput extends javax.swing.JFrame {
         }
         
         var F = parseFD(FD);
+        System.out.println(F);
         
         Set<String> inputR = new HashSet<>();
         inputR.add("A");
@@ -296,7 +303,7 @@ public class DBSInput extends javax.swing.JFrame {
         PK.add("A");
         PK.add("B");
         
-        R = to2NF(R, F, S1, PK);
+        //R = to2NF(R, F, S1, PK);
         
         System.out.println(R);
         //for(var i : F.entrySet())
