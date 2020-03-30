@@ -137,12 +137,13 @@ public class DBSInput extends javax.swing.JFrame {
     
     static Set<Set<String>> to2NF(Set<Set<String>> R, Map<Set<String>,Set<String>> FD, Set<Set<String>> Keys, Set<String> PK)
     {
+        
         Set<Set<String>> Rnew = new HashSet<>(R);
         
         while(true)
         {
             boolean modifiedFlag = false;
-            for(var Ri : Rnew)
+            for(var Ri : R)
             {
                 for(var i: FD.entrySet())
                 {
@@ -161,16 +162,18 @@ public class DBSInput extends javax.swing.JFrame {
                         if(t.equals(X))
                         {
                             Rnew.remove(Ri);
+                            R.remove(Ri);
                             t = new HashSet<>(Y);
                             t.removeAll(X);
                             var t2 = new HashSet<>(Ri); 
                             t2.removeAll(t);
                             Rnew.add(t2);
                             
-                            X.addAll(Y);
-                            Rnew.add(X);
+                            t = new HashSet<>(X);
+                            t.addAll(Y);
+                            Rnew.add(t);
                            
-                            //modifiedFlag = true;
+                            modifiedFlag = true;
                             break;
                         }
                     } 
@@ -288,8 +291,6 @@ public class DBSInput extends javax.swing.JFrame {
         
         Set<Set<String>> R = new HashSet<>();
         R.add(inputR);
-  
-        System.out.println(R);
         
         Set<String> PK = new HashSet<>();
         PK.add("A");
