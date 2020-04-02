@@ -37,9 +37,9 @@ public class DBSInput extends javax.swing.JFrame {
             {
                 var Y = i.getKey();
                 var Z = i.getValue();
-                System.out.println(Cl + " " + Y);
-                Y.removeAll(Cl);
-                if (Y.isEmpty()) {
+                var t = new HashSet<>(Y);
+                t.removeAll(Cl);
+                if (t.isEmpty()) {
                     //then Cl is superset of Y
                     Cl.addAll(Z);
                 }
@@ -132,24 +132,26 @@ public class DBSInput extends javax.swing.JFrame {
     static Set<Set<String>> to2NF(Set<Set<String>> R, Map<Set<String>,Set<String>> FD, Set<Set<String>> Keys, Set<String> PK)
     {
         
-        //Set<Set<String>> Rnew = new HashSet<>(R);
-        Set<Set<String>> Rnew = ConcurrentHashMap.newKeySet();
-        Rnew.addAll(R);
+        Set<Set<String>> Rnew = new HashSet<>();
+        //Set<Set<String>> Rnew = ConcurrentHashMap.newKeySet();
+        //Rnew.addAll(R);
         Set<Set<String>> violate = new HashSet<>();
         
-        for(var r : Rnew)
+        for(var r : R)
         {
             for(var i: FD.entrySet())
             {
                 var X = i.getKey();
                 var Y = i.getValue();
 
+                if(X.equals(PK))
+                    continue;
+                
                 for(var y : Y)
                 {
-                    System.out.println(X + "->" + y);
                     if(isPrime(y, Keys))
                         continue;
-
+                    
                     var t = new HashSet<>(X);
                     t.removeAll(PK);
 
@@ -159,7 +161,19 @@ public class DBSInput extends javax.swing.JFrame {
             }
         }
         
-        System.out.println(violate);
+        Set<String> done = new HashSet<>();
+        for(var v : violate)
+        {
+            var c = closure(v,FD);
+            var t = new HashSet<>(c);
+            t.removeAll(v);
+            done.addAll(t);
+            Rnew.add(c);
+        }
+        
+        var c = closure(PK, FD);
+        c.removeAll(done);
+        Rnew.add(c);
         
         return Rnew;
     }
@@ -230,6 +244,8 @@ public class DBSInput extends javax.swing.JFrame {
         java.awt.EventQueue.invokeLater(() -> {
             new DBSInput().setVisible(true);
         });
+        
+                
         String FD = new String();
         //FD = "A->B;B,C->E;E,D->A;";
         FD = "A->C,E;B->D";
@@ -242,7 +258,8 @@ public class DBSInput extends javax.swing.JFrame {
         //      ACD,BCD,CDE
         
         String[] X = new String[]{"A", "B", "C", "D", "E"};
-        Set<Set<String>> S1 = candidateKeys(X,FD);
+        Set<Set<String>> CK = candidateKeys(X,FD);
+        System.out.println("Candidate keys: " + CK);
         
         /*
         for(Set<String> i: S1)
@@ -259,27 +276,19 @@ public class DBSInput extends javax.swing.JFrame {
         System.out.println(FD);
         System.out.println(F);
         
-        Set<String> inputR = new HashSet<>();
-        inputR.add("A");
-        inputR.add("B");
-        inputR.add("C");
-        inputR.add("D");
-        inputR.add("E");
+        String []r1 = new String[]{"A","B","C","D","E"};
+        Set<String> inputR = new HashSet<>(Arrays.asList(r1));
         
         Set<Set<String>> R = new HashSet<>();
         R.add(inputR);
         
-        Set<String> PK = new HashSet<>();
-        PK.add("A");
-        //PK.add("B");
+        System.out.println(R);
         
-        //R = to2NF(R, F, S1, PK);
-        //System.out.println(R);
+        String []pk = new String[]{"A","B"};
+        Set<String> PK = new HashSet<>(Arrays.asList(pk));
         
-        var c = closure(PK, F);
-        System.out.println(c);
-        
-        System.out.println("done");
+        R = to2NF(R, F, CK, PK);
+        System.out.println(R);
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
