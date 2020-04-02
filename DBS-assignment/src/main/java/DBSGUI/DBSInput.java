@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  *
@@ -24,35 +25,28 @@ public class DBSInput extends javax.swing.JFrame {
     public DBSInput() {
         initComponents();
     }
-    static Set<String> closureHandler(String[] X, String FD)
+    
+    static Set<String> closure(Set<String> X, Map<Set<String>,Set<String>> FD)
     {
-        FD = FD.replaceAll("\\s", "");
-        
-        Set<String> Cl = new HashSet<>(Arrays.asList(X.clone())); 
-        
-        Set<String> XY = new HashSet<>(Arrays.asList(FD.split(";")));
+        Set<String> Cl = new HashSet<>(X); 
         
         do{
-        Set<String>OldCl = new HashSet<>(Cl);
-             
-        for(String i: XY)
-        {
-            String[] lr = i.split("->");
-            String X_Arr[] = lr[0].split(","); //indexing not supported in sets
-            String Y_Arr[] = lr[1].split(",");
-            Set<String> Xdep = new HashSet<>();
-            Xdep.addAll(Arrays.asList(X_Arr));
-            Set<String> XSC = new HashSet<>(Cl);
-            XSC.retainAll(Xdep);
-            if (XSC == Xdep) {
-                //then Xset was a superset.
-                Cl.addAll(Arrays.asList(Y_Arr));
+            Set<String> OldCl = new HashSet<>(Cl);
+
+            for(var i: FD.entrySet())
+            {
+                var Y = i.getKey();
+                var Z = i.getValue();
+                System.out.println(Cl + " " + Y);
+                Y.removeAll(Cl);
+                if (Y.isEmpty()) {
+                    //then Cl is superset of Y
+                    Cl.addAll(Z);
+                }
             }
-        }
-        if(OldCl.equals(Cl))
-            break;
+            if(OldCl.equals(Cl))
+                break;
         }while(true);
-        
         
         return Cl;
     }
@@ -122,7 +116,6 @@ public class DBSInput extends javax.swing.JFrame {
 
             Set<String> X = new HashSet<>(Arrays.asList(X_Arr));
             Set<String> Y = new HashSet<>(Arrays.asList(Y_Arr));
-            System.out.println(X + "test" + Y);
             F.put(X, Y);
         }       
         return F;
@@ -139,50 +132,34 @@ public class DBSInput extends javax.swing.JFrame {
     static Set<Set<String>> to2NF(Set<Set<String>> R, Map<Set<String>,Set<String>> FD, Set<Set<String>> Keys, Set<String> PK)
     {
         
-        Set<Set<String>> Rnew = new HashSet<>(R);
+        //Set<Set<String>> Rnew = new HashSet<>(R);
+        Set<Set<String>> Rnew = ConcurrentHashMap.newKeySet();
+        Rnew.addAll(R);
+        Set<Set<String>> violate = new HashSet<>();
         
-        while(true)
+        for(var r : Rnew)
         {
-            boolean modifiedFlag = false;
-            for(var Ri : Rnew)
+            for(var i: FD.entrySet())
             {
-                for(var i: FD.entrySet())
+                var X = i.getKey();
+                var Y = i.getValue();
+
+                for(var y : Y)
                 {
-                    var X = i.getKey();
-                    var Y = i.getValue();
-                    
-                    if(isPrime(Y.iterator().next(), Keys))
+                    System.out.println(X + "->" + y);
+                    if(isPrime(y, Keys))
                         continue;
-                    
+
                     var t = new HashSet<>(X);
-                    t.retainAll(PK);
-                    if(!PK.equals(X)) 
-                    {
-                        t = new HashSet<>(Ri);
-                        t.retainAll(X);
-                        if(t.equals(X))
-                        {
-                            Rnew.remove(Ri);
-                            R.remove(Ri);
-                            t = new HashSet<>(Y);
-                            t.removeAll(X);
-                            var t2 = new HashSet<>(Ri); 
-                            t2.removeAll(t);
-                            Rnew.add(t2);
-                            
-                            t = new HashSet<>(X);
-                            t.addAll(Y);
-                            Rnew.add(t);
-                           
-                            modifiedFlag = true;
-                            break;
-                        }
-                    } 
+                    t.removeAll(PK);
+
+                    if(t.isEmpty()) 
+                        violate.add(X);  
                 }
             }
-            if(!modifiedFlag)
-                break;
         }
+        
+        System.out.println(violate);
         
         return Rnew;
     }
@@ -264,14 +241,10 @@ public class DBSInput extends javax.swing.JFrame {
         //output:
         //      ACD,BCD,CDE
         
-        String[] X = new String[5];
-        X[0] = "A";
-        X[1] = "B";
-        X[2] = "C";
-        X[3] = "D";
-        X[4] = "E";
+        String[] X = new String[]{"A", "B", "C", "D", "E"};
         Set<Set<String>> S1 = candidateKeys(X,FD);
         
+        /*
         for(Set<String> i: S1)
         {
             for(String j:i)
@@ -280,6 +253,7 @@ public class DBSInput extends javax.swing.JFrame {
             }
             System.out.println("");
         }
+        */
         
         var F = parseFD(FD);
         System.out.println(FD);
@@ -297,13 +271,15 @@ public class DBSInput extends javax.swing.JFrame {
         
         Set<String> PK = new HashSet<>();
         PK.add("A");
-        PK.add("B");
+        //PK.add("B");
         
-        R = to2NF(R, F, S1, PK);
+        //R = to2NF(R, F, S1, PK);
+        //System.out.println(R);
         
-        System.out.println(R);
-        //for(var i : F.entrySet())
-        //    System.out.println();
+        var c = closure(PK, F);
+        System.out.println(c);
+        
+        System.out.println("done");
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
