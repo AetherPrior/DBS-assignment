@@ -173,9 +173,6 @@ public class DBSInput extends javax.swing.JFrame {
         return false;
     }
     
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
     static boolean isPartKey(Set<Set<String>> ck, Set<String> x)
     {
         for(var key: ck)
@@ -195,8 +192,6 @@ public class DBSInput extends javax.swing.JFrame {
         return false;
     }
 
-=======
->>>>>>> parent of 22601f9... Add files via upload
     static boolean is2NF(Set<Set<String>> ck, Map<Set<String>, Set<String>> fd)
     {
         //System.out.println(ck);
@@ -298,10 +293,6 @@ public class DBSInput extends javax.swing.JFrame {
             System.out.println("1NF");
     }
     
-=======
->>>>>>> parent of cfb3cb0... Update DBSInput.java
-=======
->>>>>>> parent of cfb3cb0... Update DBSInput.java
     static Set<Set<String>> to2NF(Set<Set<String>> R, Map<Set<String>,Set<String>> FD, Set<Set<String>> Keys, Set<String> PK)
     {
         
@@ -410,25 +401,8 @@ public class DBSInput extends javax.swing.JFrame {
         /* Create and display the form */
         //Before importing any image, make sure you add it to the project resources.
         
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-                java.awt.EventQueue.invokeLater(() -> {
-=======
         /*
-        java.awt.EventQueue.invokeLater(() -> {
->>>>>>> parent of cfb3cb0... Update DBSInput.java
-=======
-        /*
-        java.awt.EventQueue.invokeLater(() -> {
->>>>>>> parent of cfb3cb0... Update DBSInput.java
-=======
-        /*
-        java.awt.EventQueue.invokeLater(() -> {
-=======
-                java.awt.EventQueue.invokeLater(() -> {
->>>>>>> e93e9f588b428d5b9b987ebf7a1c10f0ab70158a
->>>>>>> parent of 22601f9... Add files via upload
+            java.awt.EventQueue.invokeLater(() -> {
             new DBSInput().setVisible(true);
         });
         */
