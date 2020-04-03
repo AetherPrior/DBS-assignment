@@ -129,6 +129,107 @@ public class DBSInput extends javax.swing.JFrame {
         return false;
     }
     
+    static boolean is2NF(Set<Set<String>> ck, Map<Set<String>, Set<String>> fd)
+    {
+        //System.out.println(ck);
+	for(var i: fd.entrySet())
+	{
+            var X = i.getKey();
+            var Y = i.getValue();
+            for(String s: Y)
+            {
+                if(!isPrime(s, ck))
+                {
+                    System.out.println("baba");
+                    for(var key: ck)
+                    {			
+                        if(X.equals(key))
+                            return true;
+                        boolean flag = true;
+                        for(String k: X)
+                            if(!key.contains(k))
+                            {
+                                flag=false;
+                                break;
+                            }
+                        if(flag==true)
+                            return false;
+                    }
+                }
+            }
+	}
+	return true;
+    }
+    
+    static boolean is3NF(Set<Set<String>> ck, Map<Set<String>, Set<String>> fd)
+    {
+	for(var i: fd.entrySet())
+	{
+            var X = i.getKey();
+            var Y = i.getValue();
+            for(String s: Y)
+            {
+                if(!isPrime(s, ck))
+                {
+                    boolean flag1 = false;
+                    for(var key: ck)
+                    {
+                        boolean flag2 = true;
+                        for(String k: key)
+                            if(!(X.contains(k)))
+                                flag2 = false;
+                        if(flag2)
+                        {
+                            flag1=true;
+                            break;
+                        }
+                    }
+                    if(!flag1)
+                        return false;
+                }
+            }
+	}
+	return true;
+    }
+
+    static boolean isBCNF(Set<Set<String>> ck, Map<Set<String>, Set<String>> fd)
+    {
+	for(var i: fd.entrySet())
+	{
+            var X = i.getKey();
+            boolean flag1 = false;
+            for(var key: ck)
+            {
+                boolean flag2 = true;
+                for(String k: key)
+                    if(!(X.contains(k)))
+                        flag2 = false;
+                if(flag2)
+                {
+                    flag1=true;
+                    break;
+                }
+            }
+            if(!flag1)
+                return false;
+	}
+	return true;
+    }
+
+    static void checkNF(Set<Set<String>> ck, Map<Set<String>, Set<String>> fd)
+    {
+	if(is2NF(ck, fd)==true)
+            if(is3NF(ck, fd))
+                if(isBCNF(ck, fd))
+                    System.out.println("BCNF");
+                else
+                    System.out.println("3NF");
+            else
+                System.out.println("2NF");
+	else
+            System.out.println("1NF");
+    }
+    
     static Set<Set<String>> to2NF(Set<Set<String>> R, Map<Set<String>,Set<String>> FD, Set<Set<String>> Keys, Set<String> PK)
     {
         
@@ -241,7 +342,7 @@ public class DBSInput extends javax.swing.JFrame {
         /* Create and display the form */
         //Before importing any image, make sure you add it to the project resources.
         
-        java.awt.EventQueue.invokeLater(() -> {
+                java.awt.EventQueue.invokeLater(() -> {
             new DBSInput().setVisible(true);
         });
         
@@ -289,6 +390,8 @@ public class DBSInput extends javax.swing.JFrame {
         
         R = to2NF(R, F, CK, PK);
         System.out.println(R);
+        checkNF(CK, F);
+        
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
