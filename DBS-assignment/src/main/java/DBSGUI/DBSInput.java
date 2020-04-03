@@ -129,6 +129,7 @@ public class DBSInput extends javax.swing.JFrame {
         return false;
     }
     
+<<<<<<< HEAD
     static boolean isPartKey(Set<Set<String>> ck, Set<String> x)
     {
         for(var key: ck)
@@ -247,6 +248,8 @@ public class DBSInput extends javax.swing.JFrame {
             System.out.println("1NF");
     }
     
+=======
+>>>>>>> parent of cfb3cb0... Update DBSInput.java
     static Set<Set<String>> to2NF(Set<Set<String>> R, Map<Set<String>,Set<String>> FD, Set<Set<String>> Keys, Set<String> PK)
     {
         
@@ -359,7 +362,12 @@ public class DBSInput extends javax.swing.JFrame {
         /* Create and display the form */
         //Before importing any image, make sure you add it to the project resources.
         
+<<<<<<< HEAD
                 java.awt.EventQueue.invokeLater(() -> {
+=======
+        /*
+        java.awt.EventQueue.invokeLater(() -> {
+>>>>>>> parent of cfb3cb0... Update DBSInput.java
             new DBSInput().setVisible(true);
         });
         
@@ -407,8 +415,6 @@ public class DBSInput extends javax.swing.JFrame {
         
         R = to2NF(R, F, CK, PK);
         System.out.println(R);
-        checkNF(CK, F);
-        
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
