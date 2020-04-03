@@ -102,50 +102,6 @@ public class DBSInput extends javax.swing.JFrame {
         return s1;
     }
     
-    static Set<Set<String>> candidateKeys2(Set<String> X, Map<Set<String>,Set<String>> FD)
-    {        
-        Set<String> Xset = new HashSet<>(X);
-
-        Set<Set<String>> s1 = new HashSet<>();
-        s1.add(Xset);
-        
-        while(true)
-        {
-        Set<Set<String>> oldS1 = new HashSet<>(s1);
-        boolean modifiedFlag = false;
-        for(Set<String> set: oldS1) 
-        {
-            for(var i: FD.entrySet())
-            {
-                var Xdep = i.getKey();
-                var Ydep = i.getValue();
-                Set<String> YSC = new HashSet<>(set);
-                YSC.retainAll(Ydep);
-                
-                Set<String> XSC = new HashSet<>(set);
-                XSC.retainAll(Xdep);
-                
-                if (YSC.equals(Ydep) && XSC.equals(Xdep)) 
-                {
-                    //then set was a superset.
-                    Set<String> Subset = new HashSet(set);
-                    Subset.removeAll(Ydep);
-                    if(!modifiedFlag)
-                    {
-                        modifiedFlag = true;
-                        s1.clear();
-                    }
-                    s1.add(Subset);
-                } 
-            }
-        }
-        if(!modifiedFlag)
-            break;
-        }
-        return s1;
-    }
-    
-    
     static Map<Set<String>, Set<String>> parseFD(String FD)
     {
         FD = FD.replaceAll("\\s", "");
@@ -173,9 +129,27 @@ public class DBSInput extends javax.swing.JFrame {
         return false;
     }
     
+    static boolean isPartKey(Set<Set<String>> ck, Set<String> x)
+    {
+        for(var key: ck)
+        {
+            if(x.equals(key))
+                return false;
+            boolean flag = true;
+            for(String k: x)
+                if(!key.contains(k))
+                {
+                    flag=false;
+                    break;
+                }
+            if(flag==true)
+                return true;
+        }
+        return false;
+    }
+
     static boolean is2NF(Set<Set<String>> ck, Map<Set<String>, Set<String>> fd)
     {
-        //System.out.println(ck);
 	for(var i: fd.entrySet())
 	{
             var X = i.getKey();
@@ -184,7 +158,6 @@ public class DBSInput extends javax.swing.JFrame {
             {
                 if(!isPrime(s, ck))
                 {
-                    System.out.println("baba");
                     for(var key: ck)
                     {			
                         if(X.equals(key))
@@ -334,19 +307,23 @@ public class DBSInput extends javax.swing.JFrame {
         jLabel1 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setMaximumSize(new java.awt.Dimension(600, 300));
+        setPreferredSize(new java.awt.Dimension(600, 296));
 
         jLabel1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/DBS.png"))); // NOI18N
-        jLabel1.setText("jLabel2");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 593, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addGap(0, 0, Short.MAX_VALUE)
+                .addComponent(jLabel1)
+                .addGap(0, 0, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addComponent(jLabel1)
         );
 
         pack();
@@ -382,15 +359,10 @@ public class DBSInput extends javax.swing.JFrame {
         /* Create and display the form */
         //Before importing any image, make sure you add it to the project resources.
         
-<<<<<<< HEAD
-        /*
-        java.awt.EventQueue.invokeLater(() -> {
-=======
                 java.awt.EventQueue.invokeLater(() -> {
->>>>>>> e93e9f588b428d5b9b987ebf7a1c10f0ab70158a
             new DBSInput().setVisible(true);
         });
-        */
+        
                 
         String FD = new String();
         //FD = "A->B;B,C->E;E,D->A;";
@@ -403,15 +375,24 @@ public class DBSInput extends javax.swing.JFrame {
         //output:
         //      ACD,BCD,CDE
         
-        String[] x = new String[]{"A", "B", "C", "D", "E"};
-        Set<String> X = new HashSet<>(Arrays.asList(x));
+        String[] X = new String[]{"A", "B", "C", "D", "E"};
+        Set<Set<String>> CK = candidateKeys(X,FD);
+        System.out.println("Candidate keys: " + CK);
+        
+        /*
+        for(Set<String> i: S1)
+        {
+            for(String j:i)
+            {
+                System.out.print(j);
+            }
+            System.out.println("");
+        }
+        */
         
         var F = parseFD(FD);
         System.out.println(FD);
         System.out.println(F);
-        
-        Set<Set<String>> CK = candidateKeys2(X,F);
-        System.out.println("Candidate keys: " + CK);
         
         String []r1 = new String[]{"A","B","C","D","E"};
         Set<String> inputR = new HashSet<>(Arrays.asList(r1));
