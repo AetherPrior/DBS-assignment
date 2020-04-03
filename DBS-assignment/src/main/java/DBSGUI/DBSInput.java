@@ -130,7 +130,6 @@ public class DBSInput extends javax.swing.JFrame {
     }
     
 <<<<<<< HEAD
-<<<<<<< HEAD
     static boolean isPartKey(Set<Set<String>> ck, Set<String> x)
     {
         for(var key: ck)
@@ -251,8 +250,6 @@ public class DBSInput extends javax.swing.JFrame {
     
 =======
 >>>>>>> parent of cfb3cb0... Update DBSInput.java
-=======
->>>>>>> parent of cfb3cb0... Update DBSInput.java
     static Set<Set<String>> to2NF(Set<Set<String>> R, Map<Set<String>,Set<String>> FD, Set<Set<String>> Keys, Set<String> PK)
     {
         
@@ -366,12 +363,7 @@ public class DBSInput extends javax.swing.JFrame {
         //Before importing any image, make sure you add it to the project resources.
         
 <<<<<<< HEAD
-<<<<<<< HEAD
                 java.awt.EventQueue.invokeLater(() -> {
-=======
-        /*
-        java.awt.EventQueue.invokeLater(() -> {
->>>>>>> parent of cfb3cb0... Update DBSInput.java
 =======
         /*
         java.awt.EventQueue.invokeLater(() -> {
