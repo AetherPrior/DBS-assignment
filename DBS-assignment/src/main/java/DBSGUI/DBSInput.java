@@ -409,7 +409,7 @@ public class DBSInput extends javax.swing.JFrame {
                 
         String FD = new String();
         //FD = "A->B;B,C->E;E,D->A;";
-        FD = "A->C,E;B->D";
+        FD = "A->B,C;C,D->E;B->D;E->A";
         
         //input A->B 
         //      BC->E
