@@ -27,30 +27,26 @@ public class DBSInput extends javax.swing.JFrame {
     
     static Set<String> closure(Set<String> X, Map<Set<String>,Set<String>> FD)
     {
-        Set<String> Cl = new HashSet<>(X); 
+        Set<String> C = new HashSet<>(X); 
         
         do{
-            Set<String> OldCl = new HashSet<>(Cl);
+            Set<String> OldC = new HashSet<>(C);
 
             for(var i: FD.entrySet())
             {
                 var Y = i.getKey();
                 var Z = i.getValue();
-                var t = new HashSet<>(Y);
-                t.removeAll(Cl);
-                if (t.isEmpty()) {
-                    //then Cl is superset of Y
-                    Cl.addAll(Z);
-                }
+                if(C.containsAll(Y))
+                    C.addAll(Z);
             }
-            if(OldCl.equals(Cl))
+            if(OldC.equals(C))
                 break;
         }while(true);
         
-        return Cl;
+        return C;
     }
     
-    static boolean covers(Map<Set<String>, Set<String>> F, Map<Set<String>, Set<String>> E)
+    static boolean covers(Map<Set<String>,Set<String>> F, Map<Set<String>,Set<String>> E)
     {
         for(var i : E.entrySet())
         {
@@ -62,7 +58,7 @@ public class DBSInput extends javax.swing.JFrame {
         return true;
     }
     
-    static boolean equivalent(Map<Set<String>, Set<String>> F, Map<Set<String>, Set<String>> E)
+    static boolean equivalent(Map<Set<String>,Set<String>> F, Map<Set<String>,Set<String>> E)
     {
         if(covers(F,E) && covers(E,F))
             return true;
@@ -70,7 +66,7 @@ public class DBSInput extends javax.swing.JFrame {
             return false;
     }
     
-    static Map<Set<String>, Set<String>> minimalCover(Map<Set<String>, Set<String>> E)
+    static Map<Set<String>,Set<String>> minimalCover(Map<Set<String>,Set<String>> E)
     {
         Map<Set<String>, Set<String>> F = new ConcurrentHashMap<>(E);
         var f = F.entrySet();
@@ -134,7 +130,7 @@ public class DBSInput extends javax.swing.JFrame {
         return F;
     }
     
-    static Set<String> minimize(Set<String> R, Map<Set<String>, Set<String>> F)
+    static Set<String> minimize(Set<String> R, Map<Set<String>,Set<String>> F)
     {        
         Set<String> K = ConcurrentHashMap.newKeySet();
         K.addAll(R);
@@ -196,10 +192,8 @@ public class DBSInput extends javax.swing.JFrame {
         
         return CK;
     }
-            
     
-    
-    static Map<Set<String>, Set<String>> parseFD(String FD)
+    static Map<Set<String>,Set<String>> parseFD(String FD)
     {
         FD = FD.replaceAll("\\s", "");
         Set<String> XY = new HashSet<>(Arrays.asList(FD.split(";")));
@@ -218,34 +212,35 @@ public class DBSInput extends javax.swing.JFrame {
         return F;
     }
     
-    static boolean isPrime(String X, Set<Set<String>> Keys)
+    static boolean isPrime(Set<Set<String>> CK, String X)
     {
-        for(var CD:Keys)
-            if(CD.contains(X))
+        for(var K : CK)
+            if(K.contains(X))
                 return true;
         return false;
     }
     
-    static boolean isPartKey(Set<Set<String>> ck, Set<String> x)
+    static boolean isPartKey(Set<Set<String>> CK, Set<String> X)
     {
-        for(var key: ck)
+        for(var K : CK)
         {
-            if(x.equals(key))
+            if(K.equals(X))
                 return false;
-            boolean flag = true;
-            for(String k: x)
-                if(!key.contains(k))
-                {
-                    flag=false;
-                    break;
-                }
-            if(flag==true)
+            if(K.containsAll(X))
                 return true;
         }
         return false;
     }
+    
+    static boolean isSuperKey(Set<Set<String>> CK, Set<String> X)
+    {
+        for(var K : CK)
+            if(X.containsAll(K))
+                return true;
+        return false;
+    }
 
-    static boolean is2NF(Set<Set<String>> ck, Map<Set<String>, Set<String>> fd)
+    static boolean is2NF(Set<Set<String>> ck, Map<Set<String>,Set<String>> fd)
     {
         for(var i: fd.entrySet())
         {
@@ -253,74 +248,43 @@ public class DBSInput extends javax.swing.JFrame {
             var Y = i.getValue();
             for(String s: Y)
             {
-                if(!isPrime(s, ck))
+                if(!isPrime(ck, s))
                     if(isPartKey(ck, X))
                         return false;
             }
         }
         return true;
     }
-    
-    static boolean is3NF(Set<Set<String>> ck, Map<Set<String>, Set<String>> fd)
+
+    static boolean is3NF(Set<Set<String>> CK, Map<Set<String>,Set<String>> FD)
     {
-	for(var i: fd.entrySet())
+	for(var i : FD.entrySet())
 	{
             var X = i.getKey();
             var Y = i.getValue();
-            for(String s: Y)
-            {
-                if(!isPrime(s, ck))
-                {
-                    boolean flag1 = false;
-                    for(var key: ck)
-                    {
-                        boolean flag2 = true;
-                        for(String k: key)
-                            if(!(X.contains(k)))
-                                flag2 = false;
-                        if(flag2)
-                        {
-                            flag1=true;
-                            break;
-                        }
-                    }
-                    if(!flag1)
-                        return false;
-                }
-            }
+            for(String y : Y)
+                if(!isPrime(CK,y) && !isSuperKey(CK,X))
+                    return false;
 	}
 	return true;
     }
-
-    static boolean isBCNF(Set<Set<String>> ck, Map<Set<String>, Set<String>> fd)
+    
+    static boolean isBCNF(Set<Set<String>> CK, Map<Set<String>, Set<String>> FD)
     {
-	for(var i: fd.entrySet())
+	for(var i : FD.entrySet())
 	{
             var X = i.getKey();
-            boolean flag1 = false;
-            for(var key: ck)
-            {
-                boolean flag2 = true;
-                for(String k: key)
-                    if(!(X.contains(k)))
-                        flag2 = false;
-                if(flag2)
-                {
-                    flag1=true;
-                    break;
-                }
-            }
-            if(!flag1)
+            if(!isSuperKey(CK,X))
                 return false;
 	}
 	return true;
     }
 
-    static void checkNF(Set<Set<String>> ck, Map<Set<String>, Set<String>> fd)
+    static void checkNF(Set<Set<String>> CK, Map<Set<String>,Set<String>> FD)
     {
-	if(is2NF(ck, fd)==true)
-            if(is3NF(ck, fd))
-                if(isBCNF(ck, fd))
+	if(is2NF(CK, FD))
+            if(is3NF(CK, FD))
+                if(isBCNF(CK, FD))
                     System.out.println("BCNF");
                 else
                     System.out.println("3NF");
@@ -330,11 +294,38 @@ public class DBSInput extends javax.swing.JFrame {
             System.out.println("1NF");
     }
     
-    static Set<Set<String>> to2NF(Set<String> R, Map<Set<String>,Set<String>> FD, Set<Set<String>> CK)
+    static Set<Set<String>> higherNF(Set<String> R, Set<Set<String>> CK, Map<Set<String>,Set<String>> FD)
+    {
+	if(is2NF(CK, FD))
+            if(is3NF(CK, FD))
+                if(isBCNF(CK, FD))
+                {
+                    System.out.println("Already in BCNF");
+                    Set<Set<String>> D = new HashSet<>();
+                    D.add(R);
+                    return D;
+                }
+                else
+                {
+                    System.out.println("Decompose to BCNF");
+                    return toBCNF(R,CK,FD);
+                }
+            else
+            {
+                System.out.println("Decompose to BCNF");
+                return to3NF(R,CK,FD);
+            }
+                
+	else
+        {
+            System.out.println("Decompose to BCNF");
+            return to2NF(R,CK,FD);        
+        }      
+    }
+    
+    static Set<Set<String>> to2NF(Set<String> R, Set<Set<String>> CK, Map<Set<String>,Set<String>> FD)
     {
         Set<Set<String>> Rnew = new HashSet<>();
-        //Set<Set<String>> Rnew = ConcurrentHashMap.newKeySet();
-        //Rnew.addAll(R);
         Set<Set<String>> violate = new HashSet<>();
 
         for(var i: FD.entrySet())
@@ -347,7 +338,7 @@ public class DBSInput extends javax.swing.JFrame {
 
             for(var y : Y)
             {
-                if(isPrime(y, CK))
+                if(isPrime(CK, y))
                     continue;
 
                 if(isPartKey(CK, X))
@@ -374,12 +365,13 @@ public class DBSInput extends javax.swing.JFrame {
         return Rnew;
     }
     
-    static Set<Set<String>> to3NF(Set<String> R, Map<Set<String>,Set<String>> FD, Set<Set<String>> CK)
+    static Set<Set<String>> to3NF(Set<String> R, Set<Set<String>> CK, Map<Set<String>,Set<String>> FD)
     {
         Set<Set<String>> Rnew = ConcurrentHashMap.newKeySet();
 
         var G = minimalCover(FD);
         System.out.println("Minimal cover of F = " + G);
+        System.out.println(G + "is 3NF? " + is3NF(CK,G));
         
         Set<String> done = new HashSet<>();
         for(var i: G.entrySet())
@@ -398,6 +390,29 @@ public class DBSInput extends javax.swing.JFrame {
             Rnew.add(c);
         
         return Rnew;        
+    }
+    
+    static Set<Set<String>> toBCNF(Set<String> R, Set<Set<String>> CK, Map<Set<String>,Set<String>> FD)
+    {
+        Set<Set<String>> Rnew = new HashSet<>();
+        
+        for(var i : FD.entrySet())
+	{
+            var X = i.getKey();
+            var Y = i.getValue();
+            if(!isSuperKey(CK,X))
+            {
+                var Q = new HashSet<>(R);
+                Q.removeAll(Y);
+                var t = new HashSet<>(X);
+                t.addAll(Y);
+                Rnew.add(Q);
+                Rnew.add(t);
+                break;
+            }
+	} 
+        
+        return Rnew;
     }
     
     /**
@@ -466,40 +481,37 @@ public class DBSInput extends javax.swing.JFrame {
         });
         */
                 
-        String FD = new String();
+        String FD;
         //FD = "A->B;B,C->E;E,D->A;";
         //FD = "A->B,C;C,D->E;B->D;E->A";
-        FD = "A,D,F->B,C,E;B,D->E";
+        //FD = "A,B->C;B->D;A->E";
+        FD = "A,B,D->C;B,D,C->A";
         
-        //input A->B 
-        //      BC->E
-        //      ED->A
+        String[] r = new String[]{"A", "B", "C", "D", "E"};
+        Set<String> R1 = new HashSet<>(Arrays.asList(r));
+        Set<Set<String>> R = new HashSet<>();
+        R.add(R1);
         
-        //output:
-        //      ACD,BCD,CDE
-        
-        String[] x = new String[]{"A", "B", "C", "D", "E", "F"};
-        Set<String> X = new HashSet<>(Arrays.asList(x));
+        System.out.println("Relation: R " + R);
         
         var F = parseFD(FD);
-        System.out.println(FD);
-        System.out.println(F);
         
-        Set<Set<String>> CK = candidateKeys(X,F);
+        System.out.println("FDs: " + Arrays.asList(FD.split(";")));
+        
+        Set<Set<String>> CK = candidateKeys(R1,F);
         System.out.println("Candidate keys: " + CK);
         
+        System.out.print("Highest normal form: ");
+        checkNF(CK,F);
         
-        String []r1 = new String[]{"A","B","C","D","E","F"};
-        Set<String> inputR = new HashSet<>(Arrays.asList(r1));
+        R = higherNF(R1,CK,F);
         
-        Set<Set<String>> R = new HashSet<>();
-        R.add(inputR);
-        
-        System.out.println(R);
-        
-        System.out.println("is 3NF? " + is3NF(CK,F));
-        R = to3NF(inputR, F, CK);
-        System.out.println(R);
+        int i = 1;
+        for(var Ri : R)
+        {
+            System.out.println("R" + i + " " + Ri);
+            i++;
+        }
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
