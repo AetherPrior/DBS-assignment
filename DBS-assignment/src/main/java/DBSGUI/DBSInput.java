@@ -164,33 +164,18 @@ public class DBSInput extends javax.swing.JFrame {
 
     static boolean is2NF(Set<Set<String>> ck, Map<Set<String>, Set<String>> fd)
     {
-        //System.out.println(ck);
-	for(var i: fd.entrySet())
-	{
+        for(var i: fd.entrySet())
+        {
             var X = i.getKey();
             var Y = i.getValue();
             for(String s: Y)
             {
                 if(!isPrime(s, ck))
-                {
-                    for(var key: ck)
-                    {			
-                        if(X.equals(key))
-                            return true;
-                        boolean flag = true;
-                        for(String k: X)
-                            if(!key.contains(k))
-                            {
-                                flag=false;
-                                break;
-                            }
-                        if(flag==true)
-                            return false;
-                    }
-                }
+                    if(isPartKey(ck, X))
+                        return false;
             }
-	}
-	return true;
+        }
+        return true;
     }
     
     static boolean is3NF(Set<Set<String>> ck, Map<Set<String>, Set<String>> fd)
