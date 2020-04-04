@@ -50,6 +50,90 @@ public class DBSInput extends javax.swing.JFrame {
         return Cl;
     }
     
+    static boolean covers(Map<Set<String>, Set<String>> F, Map<Set<String>, Set<String>> E)
+    {
+        for(var i : E.entrySet())
+        {
+            var X = i.getKey();
+            var Y = i.getValue();
+            if(!closure(X,F).containsAll(Y))
+                return false;
+        }
+        return true;
+    }
+    
+    static boolean equivalent(Map<Set<String>, Set<String>> F, Map<Set<String>, Set<String>> E)
+    {
+        if(covers(F,E) && covers(E,F))
+            return true;
+        else
+            return false;
+    }
+    
+    static Map<Set<String>, Set<String>> minimalCover(Map<Set<String>, Set<String>> E)
+    {
+        Map<Set<String>, Set<String>> F = new ConcurrentHashMap<>(E);
+        var f = F.entrySet();
+        
+        here1:
+        for(var X_A : f)
+        {
+            var X = X_A.getKey();
+            var A = X_A.getValue();
+                
+            for(var Ai : A)
+            {
+                for(var B : X)
+                {
+                    var F1 = new HashMap<>(F);
+                    F1.remove(X);
+                    var t = new HashSet<>(X);
+                    t.remove(B);
+
+                    if(F1.containsKey(t))
+                    {
+                        var t1 = F1.get(t);
+                        var a = new HashSet<>(A);
+                        a.addAll(t1);
+                        F1.put(t,a);
+                    }
+                    
+                    if(equivalent(F,F1))
+                    {
+                        F.clear();
+                        F.putAll(F1);
+                        break here1;
+                    }
+                }
+            }
+        }
+        
+        here2:
+        for(var X_A : f)
+        {
+            var X = X_A.getKey();
+            var A = X_A.getValue();
+                
+            for(var Ai : A)
+            {
+                var F1 = new HashMap<>(F);
+                F1.remove(X);
+                var t = new HashSet<>(A);
+                t.remove(Ai);
+                F1.put(X,t);
+
+                if(equivalent(F,F1))
+                {
+                    F.clear();
+                    F.putAll(F1);
+                    break here2;
+                }
+            }
+        }
+        
+        return F;
+    }
+    
     static Set<String> minimize(Set<String> R, Map<Set<String>, Set<String>> F)
     {        
         Set<String> K = ConcurrentHashMap.newKeySet();
@@ -69,7 +153,6 @@ public class DBSInput extends javax.swing.JFrame {
     
     static Set<Set<String>> candidateKeys(Set<String> R, Map<Set<String>, Set<String>> F)
     {
-        
         Set<Set<String>> CK = ConcurrentHashMap.newKeySet();
         CK.add(minimize(R,F));
       
@@ -249,7 +332,6 @@ public class DBSInput extends javax.swing.JFrame {
     
     static Set<Set<String>> to2NF(Set<String> R, Map<Set<String>,Set<String>> FD, Set<Set<String>> CK)
     {
-        
         Set<Set<String>> Rnew = new HashSet<>();
         //Set<Set<String>> Rnew = ConcurrentHashMap.newKeySet();
         //Rnew.addAll(R);
@@ -291,6 +373,33 @@ public class DBSInput extends javax.swing.JFrame {
         
         return Rnew;
     }
+    
+    static Set<Set<String>> to3NF(Set<String> R, Map<Set<String>,Set<String>> FD, Set<Set<String>> CK)
+    {
+        Set<Set<String>> Rnew = ConcurrentHashMap.newKeySet();
+
+        var G = minimalCover(FD);
+        System.out.println("Minimal cover of F = " + G);
+        
+        Set<String> done = new HashSet<>();
+        for(var i: G.entrySet())
+        {
+            var X = i.getKey();
+            var Y = i.getValue();      
+            var t = new HashSet(X);
+            t.addAll(Y);
+            Rnew.add(t);
+            done.addAll(t);
+        }
+        
+        var c = new HashSet<>(R);
+        c.removeAll(done);
+        if(!c.isEmpty())
+            Rnew.add(c);
+        
+        return Rnew;        
+    }
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -351,16 +460,16 @@ public class DBSInput extends javax.swing.JFrame {
         /* Create and display the form */
         //Before importing any image, make sure you add it to the project resources.
         
-        
+        /*
             java.awt.EventQueue.invokeLater(() -> {
             new DBSInput().setVisible(true);
         });
-        
+        */
                 
         String FD = new String();
         //FD = "A->B;B,C->E;E,D->A;";
         //FD = "A->B,C;C,D->E;B->D;E->A";
-        FD = "A->D;A,B->C;B->E";
+        FD = "A,D,F->B,C,E;B,D->E";
         
         //input A->B 
         //      BC->E
@@ -369,7 +478,7 @@ public class DBSInput extends javax.swing.JFrame {
         //output:
         //      ACD,BCD,CDE
         
-        String[] x = new String[]{"A", "B", "C", "D", "E"};
+        String[] x = new String[]{"A", "B", "C", "D", "E", "F"};
         Set<String> X = new HashSet<>(Arrays.asList(x));
         
         var F = parseFD(FD);
@@ -380,19 +489,16 @@ public class DBSInput extends javax.swing.JFrame {
         System.out.println("Candidate keys: " + CK);
         
         
-        String []r1 = new String[]{"A","B","C","D","E"};
+        String []r1 = new String[]{"A","B","C","D","E","F"};
         Set<String> inputR = new HashSet<>(Arrays.asList(r1));
         
         Set<Set<String>> R = new HashSet<>();
         R.add(inputR);
         
-//        System.out.println(R);
+        System.out.println(R);
         
-        String []pk = new String[]{"B","C","D"};
-        Set<String> PK = new HashSet<>(Arrays.asList(pk));
-        
-        System.out.println("is 2NF? " + is2NF(CK,F));
-        R = to2NF(inputR, F, CK);
+        System.out.println("is 3NF? " + is3NF(CK,F));
+        R = to3NF(inputR, F, CK);
         System.out.println(R);
     }
 
