@@ -51,99 +51,70 @@ public class DBSInput extends javax.swing.JFrame {
         return Cl;
     }
     
-    static Set<Set<String>> candidateKeys(String[] X, String FD)
-    {
-        FD = FD.replaceAll("\\s", "");
+    static Set<String> minimize(Set<String> R, Map<Set<String>, Set<String>> F)
+    {        
+        Set<String> K = ConcurrentHashMap.newKeySet();
+        K.addAll(R);
         
-        Set<String> Xset = new HashSet<>(Arrays.asList(X.clone())); 
-        
-        Set<String> XY = new HashSet<>(Arrays.asList(FD.split(";")));
-
-        Set<Set<String>> s1 = new HashSet<>();
-        s1.add(Xset);
-        
-        while(true)
+        for(var A : K)
         {
-        Set<Set<String>> oldS1 = new HashSet<>(s1);
-        boolean modifiedFlag = false;
-        for(Set<String> set: oldS1) 
-        {
-            for(String i: XY)
-            {
-                String[] lr = i.split("->");
-                String X_Arr[] = lr[0].split(","); //indexing not supported in sets
-                String Y_Arr[] = lr[1].split(",");
-                
-                Set<String> Xdep = new HashSet<>(Arrays.asList(X_Arr));
-                Set<String> Ydep = new HashSet<>(Arrays.asList(Y_Arr));
-                Set<String> YSC = new HashSet<>(set);
-                YSC.retainAll(Ydep);
-                
-                Set<String> XSC = new HashSet<>(set);
-                XSC.retainAll(Xdep);
-                
-                if (YSC.equals(Ydep) && XSC.equals(Xdep)) 
-                {
-                    //then set was a superset.
-                    Set<String> Subset = new HashSet(set);
-                    Subset.removeAll(Ydep);
-                    if(!modifiedFlag)
-                    {
-                        modifiedFlag = true;
-                        s1.clear();
-                    }
-                    s1.add(Subset);
-                } 
-            }
+            var t = new HashSet(K);
+            t.remove(A);
+            
+            if(closure(t,F).equals(closure(K,F)))
+                K.remove(A);
         }
-        if(!modifiedFlag)
-            break;
-        }
-        return s1;
+        
+        return K;
     }
     
-    static Set<Set<String>> candidateKeys2(Set<String> X, Map<Set<String>,Set<String>> FD)
-    {        
-        Set<String> Xset = new HashSet<>(X);
-
-        Set<Set<String>> s1 = new HashSet<>();
-        s1.add(Xset);
+    static Set<Set<String>> candidateKeys(Set<String> R, Map<Set<String>, Set<String>> F)
+    {
         
+        Set<Set<String>> CK = ConcurrentHashMap.newKeySet();
+        CK.add(minimize(R,F));
+      
         while(true)
         {
-        Set<Set<String>> oldS1 = new HashSet<>(s1);
-        boolean modifiedFlag = false;
-        for(Set<String> set: oldS1) 
-        {
-            for(var i: FD.entrySet())
+            boolean modified = false;
+            for(var i : F.entrySet())
             {
-                var Xdep = i.getKey();
-                var Ydep = i.getValue();
-                Set<String> YSC = new HashSet<>(set);
-                YSC.retainAll(Ydep);
+                var X = i.getKey();
+                var Y = i.getValue();
                 
-                Set<String> XSC = new HashSet<>(set);
-                XSC.retainAll(Xdep);
-                
-                if (YSC.equals(Ydep) && XSC.equals(Xdep)) 
+                boolean found = false;
+                for(var k : CK)
                 {
-                    //then set was a superset.
-                    Set<String> Subset = new HashSet(set);
-                    Subset.removeAll(Ydep);
-                    if(!modifiedFlag)
-                    {
-                        modifiedFlag = true;
-                        s1.clear();
+                    var S = new HashSet<>(X);
+                    var t = new HashSet<>(k);
+                    t.removeAll(Y);
+                    S.addAll(t);
+
+                    found = false;
+                    for(var j : CK)
+                    {   
+                        var t2 = new HashSet<>(j);
+                        t2.removeAll(S);
+                        if(t2.isEmpty())
+                        {
+                            found = true;
+                            break;
+                        }
                     }
-                    s1.add(Subset);
-                } 
+                    if(!found)
+                    {
+                        CK.add(minimize(S,F));
+                        modified = true;
+                    }
+                }
             }
+            if(!modified)
+                break;
         }
-        if(!modifiedFlag)
-            break;
-        }
-        return s1;
+        
+        return CK;
     }
+            
     
     
     static Map<Set<String>, Set<String>> parseFD(String FD)
@@ -203,7 +174,6 @@ public class DBSInput extends javax.swing.JFrame {
             {
                 if(!isPrime(s, ck))
                 {
-                    System.out.println("baba");
                     for(var key: ck)
                     {			
                         if(X.equals(key))
@@ -293,35 +263,29 @@ public class DBSInput extends javax.swing.JFrame {
             System.out.println("1NF");
     }
     
-    static Set<Set<String>> to2NF(Set<Set<String>> R, Map<Set<String>,Set<String>> FD, Set<Set<String>> Keys, Set<String> PK)
+    static Set<Set<String>> to2NF(Set<String> R, Map<Set<String>,Set<String>> FD, Set<Set<String>> CK)
     {
         
         Set<Set<String>> Rnew = new HashSet<>();
         //Set<Set<String>> Rnew = ConcurrentHashMap.newKeySet();
         //Rnew.addAll(R);
         Set<Set<String>> violate = new HashSet<>();
-        
-        for(var r : R)
+
+        for(var i: FD.entrySet())
         {
-            for(var i: FD.entrySet())
+            var X = i.getKey();
+            var Y = i.getValue();
+
+            if(CK.contains(X))
+                continue;                
+
+            for(var y : Y)
             {
-                var X = i.getKey();
-                var Y = i.getValue();
-
-                if(X.equals(PK))
+                if(isPrime(y, CK))
                     continue;
-                
-                for(var y : Y)
-                {
-                    if(isPrime(y, Keys))
-                        continue;
-                    
-                    var t = new HashSet<>(X);
-                    t.removeAll(PK);
 
-                    if(t.isEmpty()) 
-                        violate.add(X);  
-                }
+                if(isPartKey(CK, X))
+                    violate.add(X);
             }
         }
         
@@ -330,12 +294,14 @@ public class DBSInput extends javax.swing.JFrame {
         {
             var c = closure(v,FD);
             var t = new HashSet<>(c);
+            c.removeAll(done);
+            if(!c.equals(v))
+                Rnew.add(c);
             t.removeAll(v);
             done.addAll(t);
-            Rnew.add(c);
         }
         
-        var c = closure(PK, FD);
+        var c = new HashSet<>(R);
         c.removeAll(done);
         Rnew.add(c);
         
@@ -409,7 +375,8 @@ public class DBSInput extends javax.swing.JFrame {
                 
         String FD = new String();
         //FD = "A->B;B,C->E;E,D->A;";
-        FD = "A->B,C;C,D->E;B->D;E->A";
+        //FD = "A->B,C;C,D->E;B->D;E->A";
+        FD = "A->D;A,B->C;B->E";
         
         //input A->B 
         //      BC->E
@@ -425,8 +392,9 @@ public class DBSInput extends javax.swing.JFrame {
         System.out.println(FD);
         System.out.println(F);
         
-        Set<Set<String>> CK = candidateKeys2(X,F);
+        Set<Set<String>> CK = candidateKeys(X,F);
         System.out.println("Candidate keys: " + CK);
+        
         
         String []r1 = new String[]{"A","B","C","D","E"};
         Set<String> inputR = new HashSet<>(Arrays.asList(r1));
@@ -434,12 +402,13 @@ public class DBSInput extends javax.swing.JFrame {
         Set<Set<String>> R = new HashSet<>();
         R.add(inputR);
         
-        System.out.println(R);
+//        System.out.println(R);
         
-        String []pk = new String[]{"A","B"};
+        String []pk = new String[]{"B","C","D"};
         Set<String> PK = new HashSet<>(Arrays.asList(pk));
         
-        R = to2NF(R, F, CK, PK);
+        System.out.println("is 2NF? " + is2NF(CK,F));
+        R = to2NF(inputR, F, CK);
         System.out.println(R);
     }
 
