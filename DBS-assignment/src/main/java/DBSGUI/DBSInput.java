@@ -10,7 +10,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Consumer;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -367,11 +366,11 @@ public class DBSInput extends javax.swing.JFrame {
         /* Create and display the form */
         //Before importing any image, make sure you add it to the project resources.
         
-        /*
+        
             java.awt.EventQueue.invokeLater(() -> {
             new DBSInput().setVisible(true);
         });
-        */
+        
                 
         String FD = new String();
         //FD = "A->B;B,C->E;E,D->A;";
