@@ -509,7 +509,8 @@ public class DBSInput extends javax.swing.JFrame {
         int i = 1;
         for(var Ri : R)
         {
-            System.out.println("R" + i + " " + Ri);
+            System.out.print("R" + i + " " + Ri);
+            System.out.println(" PK: " + minimize(Ri,F));
             i++;
         }
     }
