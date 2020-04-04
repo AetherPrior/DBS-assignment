@@ -51,56 +51,71 @@ public class DBSInput extends javax.swing.JFrame {
         return Cl;
     }
     
-    static Set<Set<String>> candidateKeys(String[] X, String FD)
+    static Set<String> minimize(Set<String> R, Map<Set<String>, Set<String>> F)
+    {        
+        Set<String> K = ConcurrentHashMap.newKeySet();
+        K.addAll(R);
+        
+        for(var A : K)
+        {
+            var t = new HashSet(K);
+            t.remove(A);
+            
+            if(closure(t,F).equals(closure(K,F)))
+                K.remove(A);
+        }
+        
+        return K;
+    }
+    
+    static Set<Set<String>> candidateKeys(Set<String> R, Map<Set<String>, Set<String>> F)
     {
-        FD = FD.replaceAll("\\s", "");
         
-        Set<String> Xset = new HashSet<>(Arrays.asList(X.clone())); 
-        
-        Set<String> XY = new HashSet<>(Arrays.asList(FD.split(";")));
-
-        Set<Set<String>> s1 = new HashSet<>();
-        s1.add(Xset);
-        
+        Set<Set<String>> CK = ConcurrentHashMap.newKeySet();
+        CK.add(minimize(R,F));
+      
         while(true)
         {
-        Set<Set<String>> oldS1 = new HashSet<>(s1);
-        boolean modifiedFlag = false;
-        for(Set<String> set: oldS1) 
-        {
-            for(String i: XY)
+            boolean modified = false;
+            for(var i : F.entrySet())
             {
-                String[] lr = i.split("->");
-                String X_Arr[] = lr[0].split(","); //indexing not supported in sets
-                String Y_Arr[] = lr[1].split(",");
+                var X = i.getKey();
+                var Y = i.getValue();
                 
-                Set<String> Xdep = new HashSet<>(Arrays.asList(X_Arr));
-                Set<String> Ydep = new HashSet<>(Arrays.asList(Y_Arr));
-                Set<String> YSC = new HashSet<>(set);
-                YSC.retainAll(Ydep);
-                
-                Set<String> XSC = new HashSet<>(set);
-                XSC.retainAll(Xdep);
-                
-                if (YSC.equals(Ydep) && XSC.equals(Xdep)) 
+                boolean found = false;
+                for(var k : CK)
                 {
-                    //then set was a superset.
-                    Set<String> Subset = new HashSet(set);
-                    Subset.removeAll(Ydep);
-                    if(!modifiedFlag)
-                    {
-                        modifiedFlag = true;
-                        s1.clear();
+                    var S = new HashSet<>(X);
+                    var t = new HashSet<>(k);
+                    t.removeAll(Y);
+                    S.addAll(t);
+
+                    found = false;
+                    for(var j : CK)
+                    {   
+                        var t2 = new HashSet<>(j);
+                        t2.removeAll(S);
+                        if(t2.isEmpty())
+                        {
+                            found = true;
+                            break;
+                        }
                     }
-                    s1.add(Subset);
-                } 
+                    if(!found)
+                    {
+                        CK.add(minimize(S,F));
+                        modified = true;
+                    }
+                }
             }
+            if(!modified)
+                break;
         }
-        if(!modifiedFlag)
-            break;
-        }
-        return s1;
+        
+        return CK;
     }
+            
+    
     
     static Map<Set<String>, Set<String>> parseFD(String FD)
     {
@@ -150,38 +165,24 @@ public class DBSInput extends javax.swing.JFrame {
 
     static boolean is2NF(Set<Set<String>> ck, Map<Set<String>, Set<String>> fd)
     {
-	for(var i: fd.entrySet())
-	{
+        for(var i: fd.entrySet())
+        {
             var X = i.getKey();
             var Y = i.getValue();
             for(String s: Y)
             {
                 if(!isPrime(s, ck))
-                {
-                    for(var key: ck)
-                    {			
-                        if(X.equals(key))
-                            return true;
-                        boolean flag = true;
-                        for(String k: X)
-                            if(!key.contains(k))
-                            {
-                                flag=false;
-                                break;
-                            }
-                        if(flag==true)
-                            return false;
-                    }
-                }
+                    if(isPartKey(ck, X))
+                        return false;
             }
-	}
-	return true;
+        }
+        return true;
     }
     
     static boolean is3NF(Set<Set<String>> ck, Map<Set<String>, Set<String>> fd)
     {
-	for(var i: fd.entrySet())
-	{
+        for(var i: fd.entrySet())
+        {
             var X = i.getKey();
             var Y = i.getValue();
             for(String s: Y)
@@ -205,14 +206,14 @@ public class DBSInput extends javax.swing.JFrame {
                         return false;
                 }
             }
-	}
-	return true;
+        }
+        return true;
     }
 
     static boolean isBCNF(Set<Set<String>> ck, Map<Set<String>, Set<String>> fd)
     {
-	for(var i: fd.entrySet())
-	{
+        for(var i: fd.entrySet())
+        {
             var X = i.getKey();
             boolean flag1 = false;
             for(var key: ck)
@@ -229,13 +230,13 @@ public class DBSInput extends javax.swing.JFrame {
             }
             if(!flag1)
                 return false;
-	}
-	return true;
+        }
+        return true;
     }
 
     static void checkNF(Set<Set<String>> ck, Map<Set<String>, Set<String>> fd)
     {
-	if(is2NF(ck, fd)==true)
+        if(is2NF(ck, fd)==true)
             if(is3NF(ck, fd))
                 if(isBCNF(ck, fd))
                     System.out.println("BCNF");
@@ -243,39 +244,33 @@ public class DBSInput extends javax.swing.JFrame {
                     System.out.println("3NF");
             else
                 System.out.println("2NF");
-	else
+        else
             System.out.println("1NF");
     }
     
-    static Set<Set<String>> to2NF(Set<Set<String>> R, Map<Set<String>,Set<String>> FD, Set<Set<String>> Keys, Set<String> PK)
+    static Set<Set<String>> to2NF(Set<String> R, Map<Set<String>,Set<String>> FD, Set<Set<String>> CK)
     {
         
         Set<Set<String>> Rnew = new HashSet<>();
         //Set<Set<String>> Rnew = ConcurrentHashMap.newKeySet();
         //Rnew.addAll(R);
         Set<Set<String>> violate = new HashSet<>();
-        
-        for(var r : R)
+
+        for(var i: FD.entrySet())
         {
-            for(var i: FD.entrySet())
+            var X = i.getKey();
+            var Y = i.getValue();
+
+            if(CK.contains(X))
+                continue;                
+
+            for(var y : Y)
             {
-                var X = i.getKey();
-                var Y = i.getValue();
-
-                if(X.equals(PK))
+                if(isPrime(y, CK))
                     continue;
-                
-                for(var y : Y)
-                {
-                    if(isPrime(y, Keys))
-                        continue;
-                    
-                    var t = new HashSet<>(X);
-                    t.removeAll(PK);
 
-                    if(t.isEmpty()) 
-                        violate.add(X);  
-                }
+                if(isPartKey(CK, X))
+                    violate.add(X);
             }
         }
         
@@ -284,12 +279,14 @@ public class DBSInput extends javax.swing.JFrame {
         {
             var c = closure(v,FD);
             var t = new HashSet<>(c);
+            c.removeAll(done);
+            if(!c.equals(v))
+                Rnew.add(c);
             t.removeAll(v);
             done.addAll(t);
-            Rnew.add(c);
         }
         
-        var c = closure(PK, FD);
+        var c = new HashSet<>(R);
         c.removeAll(done);
         Rnew.add(c);
         
@@ -307,23 +304,19 @@ public class DBSInput extends javax.swing.JFrame {
         jLabel1 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setMaximumSize(new java.awt.Dimension(600, 300));
-        setPreferredSize(new java.awt.Dimension(600, 296));
 
         jLabel1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/DBS.png"))); // NOI18N
+        jLabel1.setText("jLabel2");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addGap(0, 0, Short.MAX_VALUE)
-                .addComponent(jLabel1)
-                .addGap(0, 0, Short.MAX_VALUE))
+            .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 593, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jLabel1)
+            .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
 
         pack();
@@ -359,14 +352,16 @@ public class DBSInput extends javax.swing.JFrame {
         /* Create and display the form */
         //Before importing any image, make sure you add it to the project resources.
         
-                java.awt.EventQueue.invokeLater(() -> {
+        /*
+            java.awt.EventQueue.invokeLater(() -> {
             new DBSInput().setVisible(true);
         });
-        
+        */
                 
         String FD = new String();
         //FD = "A->B;B,C->E;E,D->A;";
-        FD = "A->C,E;B->D";
+        //FD = "A->B,C;C,D->E;B->D;E->A";
+        FD = "A->D;A,B->C;B->E";
         
         //input A->B 
         //      BC->E
@@ -375,24 +370,16 @@ public class DBSInput extends javax.swing.JFrame {
         //output:
         //      ACD,BCD,CDE
         
-        String[] X = new String[]{"A", "B", "C", "D", "E"};
-        Set<Set<String>> CK = candidateKeys(X,FD);
-        System.out.println("Candidate keys: " + CK);
-        
-        /*
-        for(Set<String> i: S1)
-        {
-            for(String j:i)
-            {
-                System.out.print(j);
-            }
-            System.out.println("");
-        }
-        */
+        String[] x = new String[]{"A", "B", "C", "D", "E"};
+        Set<String> X = new HashSet<>(Arrays.asList(x));
         
         var F = parseFD(FD);
         System.out.println(FD);
         System.out.println(F);
+        
+        Set<Set<String>> CK = candidateKeys(X,F);
+        System.out.println("Candidate keys: " + CK);
+        
         
         String []r1 = new String[]{"A","B","C","D","E"};
         Set<String> inputR = new HashSet<>(Arrays.asList(r1));
@@ -400,15 +387,14 @@ public class DBSInput extends javax.swing.JFrame {
         Set<Set<String>> R = new HashSet<>();
         R.add(inputR);
         
-        System.out.println(R);
+//        System.out.println(R);
         
-        String []pk = new String[]{"A","B"};
+        String []pk = new String[]{"B","C","D"};
         Set<String> PK = new HashSet<>(Arrays.asList(pk));
         
-        R = to2NF(R, F, CK, PK);
+        System.out.println("is 2NF? " + is2NF(CK,F));
+        R = to2NF(inputR, F, CK);
         System.out.println(R);
-        checkNF(CK, F);
-        
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
