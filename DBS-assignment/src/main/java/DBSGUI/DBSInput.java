@@ -83,17 +83,22 @@ public class DBSInput extends javax.swing.JFrame {
                 {
                     var F1 = new HashMap<>(F);
                     F1.remove(X);
+                    
+                    var a = new HashSet<>(A);
+                    a.remove(Ai);
+                    F1.put(X,a);
+                    
                     var t = new HashSet<>(X);
                     t.remove(B);
 
                     if(F1.containsKey(t))
                     {
                         var t1 = F1.get(t);
-                        var a = new HashSet<>(A);
+                        a = new HashSet<>(A);
                         a.addAll(t1);
                         F1.put(t,a);
                     }
-                    
+                                       
                     if(equivalent(F,F1))
                     {
                         F.clear();
